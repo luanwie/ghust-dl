@@ -1,4 +1,4 @@
-import { useSearchParams } from "react-router-dom"
+import { useSearchParams, Link } from "react-router-dom"
 import QueueStatus from "../components/QueueStatus"
 
 export default function QueuePage() {
@@ -6,21 +6,21 @@ export default function QueuePage() {
   const taskId = params.get("task")
 
   return (
-    <div>
-      <h1 className="text-2xl font-bold text-text-primary mb-6">Fila de Downloads</h1>
+    <div className="max-w-lg mx-auto px-4 py-12">
+      <h1 className="text-2xl font-bold text-text-primary tracking-tight mb-6">Fila de Downloads</h1>
 
       {taskId ? (
-        <div className="max-w-lg mx-auto">
-          <QueueStatus taskId={taskId} />
-          <p className="text-text-secondary text-xs mt-4 text-center">
-            A página atualiza automaticamente. Não feche enquanto o download não completar.
-          </p>
-        </div>
+        <QueueStatus taskId={taskId} />
       ) : (
-        <div className="text-center text-text-secondary/40 py-16">
-          <p className="text-6xl mb-4">⏳</p>
-          <p>Nenhum download em andamento.</p>
-          <p className="text-sm mt-2">Busque uma música na página inicial para começar.</p>
+        <div className="text-center py-16">
+          <div className="w-12 h-12 mx-auto mb-4 rounded-xl bg-white/5 flex items-center justify-center text-text-muted text-2xl">
+            ⏳
+          </div>
+          <p className="text-text-secondary text-sm mb-1">Nenhum download em andamento</p>
+          <p className="text-text-muted text-xs">
+            Busque uma música na{" "}
+            <Link to="/" className="text-brand-gold underline">página inicial</Link> pra começar.
+          </p>
         </div>
       )}
     </div>

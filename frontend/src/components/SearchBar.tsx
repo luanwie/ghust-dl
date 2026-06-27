@@ -18,21 +18,28 @@ export default function SearchBar({ onSearch, loading }: SearchBarProps) {
 
   return (
     <form onSubmit={handleSubmit} className="relative">
-      <div className="glass rounded-2xl p-1 flex items-center gap-2 focus-within:border-brand-gold/30 focus-within:shadow-[0_0_30px_rgba(235,166,28,0.08)] transition-all">
+      <div className="glass rounded-xl sm:rounded-2xl p-1.5 flex items-center gap-2 focus-within:border-brand-gold/25 focus-within:shadow-[0_0_24px_rgba(235,166,28,0.06)] transition-all">
         <input
           type="text"
           value={query}
           onChange={(e) => setQuery(e.target.value)}
           placeholder="Busque artista, música, álbum..."
-          className="flex-1 bg-transparent border-none outline-none px-4 py-4 text-lg text-text-primary placeholder:text-text-secondary/50"
+          className="flex-1 bg-transparent border-none outline-none px-3 sm:px-4 py-3 sm:py-3.5 text-base sm:text-lg text-text-primary placeholder:text-text-muted/60"
           autoFocus
         />
         <button
           type="submit"
           disabled={loading || query.trim().length < 2}
-          className="bg-brand-gold text-bg-base font-semibold px-6 py-3 rounded-xl disabled:opacity-40 transition-all hover:brightness-110 cursor-pointer"
+          className="btn-gold rounded-lg sm:rounded-xl px-4 sm:px-6 py-3 text-sm font-semibold disabled:opacity-40 min-h-0"
         >
-          {loading ? "Buscando..." : "Buscar"}
+          {loading ? (
+            <span className="flex items-center gap-2">
+              <span className="w-4 h-4 border-2 border-bg-base/30 border-t-bg-base rounded-full animate-spin" />
+              <span className="hidden sm:inline">Buscando</span>
+            </span>
+          ) : (
+            "Buscar"
+          )}
         </button>
       </div>
     </form>

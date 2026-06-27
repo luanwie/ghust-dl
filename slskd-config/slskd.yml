@@ -1,0 +1,17 @@
+# slskd configuration
+# https://github.com/slskd/slskd
+
+soulseek:
+  username: ""
+  password: ""
+
+directories:
+  downloads: "/downloads"
+  incomplete: "/downloads/.incomplete"
+
+web:
+  authentication: false
+
+flags:
+  log_sql: false
+  no_connect: false
