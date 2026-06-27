@@ -6,7 +6,7 @@ export default function QueuePage() {
   const taskId = params.get("task")
 
   return (
-    <div className="max-w-lg mx-auto px-4 py-12">
+    <div className="max-w-lg mx-auto py-12">
       <h1 className="text-2xl font-bold text-text-primary tracking-tight mb-6">Fila de Downloads</h1>
 
       {taskId ? (

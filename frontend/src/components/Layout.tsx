@@ -1,6 +1,6 @@
 import { Outlet, Link, useLocation } from "react-router-dom"
 import { useState, useEffect } from "react"
-import { Menu, X } from "lucide-react"
+import { Menu, X, Heart } from "lucide-react"
 
 const NAV = [
   { path: "/", label: "Buscar" },
@@ -19,7 +19,6 @@ export default function Layout() {
     return () => window.removeEventListener("scroll", fn)
   }, [])
 
-  // Close menu on route change
   useEffect(() => { setOpen(false) }, [loc.pathname])
 
   return (
@@ -27,7 +26,9 @@ export default function Layout() {
       {/* Header */}
       <header
         className={`fixed top-0 left-0 right-0 z-50 transition-all duration-300 ${
-          scrolled ? "bg-bg-elevated/90 backdrop-blur-xl border-b border-border-subtle" : "bg-transparent"
+          scrolled
+            ? "bg-bg-elevated/90 backdrop-blur-xl border-b border-border-subtle"
+            : "bg-transparent"
         }`}
       >
         <div className="flex items-center justify-between px-5 h-14 sm:h-16 max-w-6xl mx-auto">
@@ -51,8 +52,9 @@ export default function Layout() {
                 {item.label}
               </Link>
             ))}
-            <Link to="/donate" className="ml-3 btn-gold text-sm px-5 py-2.5 rounded-lg min-h-[44px]">
-              Pix ❤️
+            <Link to="/donate" className="ml-3 btn-gold text-sm px-5 py-2.5 rounded-lg min-h-[44px] gap-2">
+              <Heart size={16} />
+              Pix
             </Link>
           </nav>
 
@@ -70,16 +72,16 @@ export default function Layout() {
       {/* Mobile drawer */}
       {open && (
         <>
-          <div className="fixed inset-0 z-40 bg-black/50 sm:hidden" onClick={() => setOpen(false)} />
-          <div className="fixed top-0 right-0 z-50 w-64 h-full bg-bg-secondary border-l border-border-subtle pt-20 px-4 sm:hidden">
-            <nav className="flex flex-col gap-1">
+          <div className="fixed inset-0 z-40 bg-black/60 sm:hidden" onClick={() => setOpen(false)} />
+          <div className="fixed top-0 right-0 z-50 w-72 h-full bg-bg-secondary border-l border-border-subtle pt-20 px-5 sm:hidden">
+            <nav className="flex flex-col gap-1.5">
               {NAV.map((item) => {
                 const active = loc.pathname === item.path
                 return (
                   <Link
                     key={item.path}
                     to={item.path}
-                    className={`flex items-center gap-3 px-4 py-3.5 rounded-xl text-[15px] font-medium transition-all min-h-[52px] ${
+                    className={`flex items-center gap-3 px-5 py-4 rounded-xl text-[16px] font-medium transition-all min-h-[54px] ${
                       active
                         ? "bg-brand-gold/12 text-brand-gold"
                         : "text-text-secondary hover:text-text-primary hover:bg-white/5"
@@ -90,18 +92,27 @@ export default function Layout() {
                   </Link>
                 )
               })}
+              <div className="border-t border-border-subtle my-4" />
+              <Link
+                to="/donate"
+                className="btn-gold w-full text-[15px] gap-2"
+                onClick={() => setOpen(false)}
+              >
+                <Heart size={18} />
+                Fazer um Pix
+              </Link>
             </nav>
           </div>
         </>
       )}
 
-      {/* Content */}
-      <main className="pt-14 sm:pt-16">
+      {/* Content — global padding added here */}
+      <main className="pt-14 sm:pt-16 px-5">
         <Outlet />
       </main>
 
       {/* Footer */}
-      <footer className="border-t border-border-subtle mt-16 py-8 px-5">
+      <footer className="border-t border-border-subtle mt-20 py-10 px-5">
         <div className="max-w-6xl mx-auto text-center">
           <div className="flex items-center justify-center gap-2 mb-3">
             <span className="text-xl font-bold text-brand-gold">G</span>
