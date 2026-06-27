@@ -3,30 +3,18 @@ import { motion, useReducedMotion } from "motion/react"
 import { Link } from "react-router-dom"
 import SearchBar from "../components/SearchBar"
 import ResultCard from "../components/ResultCard"
-import { searchMusic, getStatus, formatSize } from "../lib/api"
+import { searchMusic, getStatus } from "../lib/api"
 
-/* ── Scroll-Reveal wrappers ── */
-function Section({ children, className = "", delay = 0 }: { children: React.ReactNode; className?: string; delay?: number }) {
-  const reduce = useReducedMotion()
+/* ── Scroll Reveal ── */
+function Reveal({ children, delay = 0, className = "" }: { children: React.ReactNode; delay?: number; className?: string }) {
+  const r = useReducedMotion()
   return (
     <motion.div
-      initial={reduce ? { opacity: 1 } : { opacity: 0, y: 60, scale: 0.96 }}
-      whileInView={{ opacity: 1, y: 0, scale: 1 }}
-      viewport={{ once: true, amount: 0.1 }}
-      transition={{ duration: 0.8, delay, ease: [0.16, 1, 0.3, 1] }}
+      initial={r ? { opacity: 1 } : { opacity: 0, y: 40 }}
+      whileInView={{ opacity: 1, y: 0 }}
+      viewport={{ once: true, amount: 0.08 }}
+      transition={{ duration: 0.65, delay, ease: [0.16, 1, 0.3, 1] }}
       className={className}
-    >{children}</motion.div>
-  )
-}
-
-function StaggerItem({ children, index = 0 }: { children: React.ReactNode; index?: number }) {
-  const reduce = useReducedMotion()
-  return (
-    <motion.div
-      initial={reduce ? { opacity: 1 } : { opacity: 0, y: 40, scale: 0.92 }}
-      whileInView={{ opacity: 1, y: 0, scale: 1 }}
-      viewport={{ once: true }}
-      transition={{ duration: 0.65, delay: index * 0.12, ease: [0.16, 1, 0.3, 1] }}
     >{children}</motion.div>
   )
 }
@@ -36,9 +24,8 @@ function MouseGlow() {
   const ref = useRef<HTMLDivElement>(null)
   const raf = useRef(0)
   const reduce = useReducedMotion()
-
   useEffect(() => {
-    if (reduce || typeof window === "undefined") return
+    if (reduce) return
     const el = ref.current
     if (!el) return
     const handler = (e: PointerEvent) => {
@@ -51,88 +38,72 @@ function MouseGlow() {
     window.addEventListener("pointermove", handler)
     return () => { window.removeEventListener("pointermove", handler); cancelAnimationFrame(raf.current) }
   }, [reduce])
-
-  return (
-    <div
-      ref={ref}
-      aria-hidden="true"
-      className="pointer-events-none fixed inset-0 z-[60]"
-      style={{
-        background: "radial-gradient(600px circle at var(--mx, 50%) var(--my, 50%), rgba(235,166,28,0.08) 0%, transparent 50%)",
-      }}
-    />
-  )
+  return <div ref={ref} aria-hidden className="pointer-events-none fixed inset-0 z-[60]" style={{ background: "radial-gradient(600px circle at var(--mx,50%) var(--my,50%),rgba(235,166,28,0.06) 0%,transparent 50%)" }} />
 }
 
-/* ── BG Orbs ── */
+/* ── BgOrbs ── */
 function BgOrbs() {
-  const reduce = useReducedMotion()
-  if (reduce) return null
+  const r = useReducedMotion()
+  if (r) return null
   return (
     <div className="pointer-events-none fixed inset-0 z-[1] overflow-hidden">
-      <motion.div
-        className="absolute rounded-full"
-        style={{ width: 520, height: 520, background: "rgba(235,166,28,0.04)", filter: "blur(100px)", top: "5%", left: "-10%" }}
+      <motion.div className="absolute rounded-full" style={{ width: 480, height: 480, background: "rgba(235,166,28,0.035)", filter: "blur(90px)", top: "3%", left: "-12%" }}
         animate={{ x: [0, 40, -30, 20, 0], y: [0, -50, 30, -20, 0], scale: [1, 1.1, 0.95, 1.05, 1] }}
-        transition={{ duration: 22, repeat: Infinity, ease: "easeInOut" }}
-      />
-      <motion.div
-        className="absolute rounded-full"
-        style={{ width: 400, height: 400, background: "rgba(235,166,28,0.03)", filter: "blur(80px)", bottom: "10%", right: "-8%" }}
+        transition={{ duration: 22, repeat: Infinity, ease: "easeInOut" }} />
+      <motion.div className="absolute rounded-full" style={{ width: 360, height: 360, background: "rgba(235,166,28,0.025)", filter: "blur(80px)", bottom: "8%", right: "-10%" }}
         animate={{ x: [0, -30, 40, -20, 0], y: [0, 40, -30, 20, 0], scale: [1, 0.92, 1.08, 0.96, 1] }}
-        transition={{ duration: 26, repeat: Infinity, ease: "easeInOut", delay: 2 }}
-      />
-      <motion.div
-        className="absolute rounded-full"
-        style={{ width: 300, height: 300, background: "rgba(235,166,28,0.03)", filter: "blur(70px)", top: "50%", left: "50%", translateX: "-50%", translateY: "-50%" }}
+        transition={{ duration: 26, repeat: Infinity, ease: "easeInOut", delay: 2 }} />
+      <motion.div className="absolute rounded-full" style={{ width: 280, height: 280, background: "rgba(235,166,28,0.025)", filter: "blur(70px)", top: "50%", left: "50%", translateX: "-50%", translateY: "-50%" }}
         animate={{ x: [0, 50, -40, 30, 0], y: [0, -30, 50, -40, 0], scale: [1, 1.06, 0.94, 1.02, 1] }}
-        transition={{ duration: 24, repeat: Infinity, ease: "easeInOut", delay: 4 }}
-      />
+        transition={{ duration: 24, repeat: Infinity, ease: "easeInOut", delay: 4 }} />
     </div>
   )
 }
 
-/* ── Stats pill ── */
-function SystemPill() {
-  const [stats, setStats] = useState<{ total_files: number; total_size_mb: number } | null>(null)
-
+/* ── Status pill ── */
+function StatusPill() {
+  const [s, setS] = useState<string>("Sistema pronto")
   useEffect(() => {
-    getStatus().then((d) => {
-      if (d?.cache) setStats(d.cache)
+    getStatus().then(d => {
+      if (d?.cache?.total_files) setS(`${d.cache.total_files} músicas em cache`)
     }).catch(() => {})
   }, [])
-
   return (
-    <div className="inline-flex items-center gap-2 px-3 py-1.5 rounded-full bg-white/[0.04] border border-white/[0.06] text-[11px] text-text-muted">
-      <span className="w-1.5 h-1.5 rounded-full bg-emerald-500 shadow-[0_0_8px_rgba(52,211,153,0.4)]" />
-      {stats ? (
-        <span>{stats.total_files} arquivos · {stats.total_size_mb}MB em cache</span>
-      ) : (
-        <span>Sistema pronto</span>
-      )}
+    <div className="inline-flex items-center gap-2 px-3.5 py-2 rounded-full bg-white/[0.04] border border-white/[0.06]">
+      <span className="w-2 h-2 rounded-full bg-emerald-500 shadow-[0_0_10px_rgba(52,211,153,0.4)]" />
+      <span className="text-[12px] text-text-secondary font-medium">{s}</span>
     </div>
   )
 }
 
-/* ── Steps ── */
-const steps = [
-  { icon: "01", title: "Busque", desc: "Digite o nome do artista ou música que você quer baixar." },
-  { icon: "02", title: "Escolha", desc: "Veja resultados em FLAC ou MP3 320kbps de verdade." },
-  { icon: "03", title: "Baixe", desc: "Download direto. Se já estiver em cache, é instantâneo." },
-  { icon: "04", title: "Toque", desc: "Pronto pra rodar na cabine. Qualidade que passa no som do clube." },
+const STEPS = [
+  { num: "01", title: "Busque", desc: "Digite artista ou música. A busca varre a rede Soulseek em segundos." },
+  { num: "02", title: "Escolha", desc: "Resultados em FLAC ou MP3 320kbps de verdade — sem upscale." },
+  { num: "03", title: "Baixe", desc: "Se já estiver em cache, é instantâneo. Se não, baixa de um peer." },
+  { num: "04", title: "Toque", desc: "Pronto pra rodar na cabine. Qualidade que passa no PA do clube." },
 ]
 
-/* ── Main page ── */
+const FEATURES = [
+  { num: "01", title: "FLAC e 320 reais", desc: "Sem upscale de YouTube. Áudio verdadeiro de fontes lossless." },
+  { num: "02", title: "Cache inteligente", desc: "Música já baixada por alguém? Seu download sai em 1s." },
+  { num: "03", title: "Sem mensalidade", desc: "Não tem plano nem assinatura. Contribua via Pix se quiser." },
+  { num: "04", title: "Rede Soulseek", desc: "Milhares compartilhando acervo real. Música que não existe em lugar nenhum." },
+  { num: "05", title: "Pronto pra cabine", desc: "MP3 320 é o padrão de clubes. FLAC pra quem quer o máximo." },
+  { num: "06", title: "Código aberto", desc: "Sem pegadinha, sem coleta. O código tá no GitHub." },
+]
+
 export default function HomePage() {
   const [results, setResults] = useState<any[]>([])
   const [loading, setLoading] = useState(false)
   const [error, setError] = useState<string | null>(null)
   const [query, setQuery] = useState("")
+  const [searched, setSearched] = useState(false)
 
   const handleSearch = useCallback(async (q: string) => {
     setLoading(true)
     setError(null)
     setQuery(q)
+    setSearched(true)
     try {
       const data = await searchMusic(q)
       setResults(data.results || [])
@@ -150,79 +121,76 @@ export default function HomePage() {
       <BgOrbs />
 
       {/* ── Hero ── */}
-      <section className="section min-h-[85dvh] flex flex-col justify-center items-center text-center px-4 relative">
-        <Section delay={0}>
-          <div className="mb-6 flex justify-center">
-            <SystemPill />
-          </div>
-        </Section>
+      <section className="min-h-[80dvh] flex flex-col justify-center px-5 py-16">
+        <div className="max-w-xl mx-auto w-full">
+          <Reveal>
+            <div className="flex justify-center mb-5">
+              <StatusPill />
+            </div>
+          </Reveal>
 
-        <Section delay={0.1}>
-          <h1 className="text-4xl sm:text-5xl lg:text-6xl font-bold text-text-primary tracking-tight leading-[1.05] mb-4 text-balance">
-            Música pra DJ<br />
-            <span className="text-brand-gold">em qualidade real</span>
-          </h1>
-        </Section>
+          <Reveal delay={0.08}>
+            <h1 className="text-[2rem] sm:text-[2.75rem] lg:text-[3.5rem] font-bold text-text-primary tracking-tight leading-[1.08] text-center mb-3 text-balance">
+              Música pra DJ<br />
+              <span className="text-brand-gold">em qualidade real</span>
+            </h1>
+          </Reveal>
 
-        <Section delay={0.2}>
-          <p className="text-text-secondary text-base sm:text-lg max-w-lg mx-auto mb-8 leading-relaxed">
-            FLAC e MP3 320kbps verdadeiros via Soulseek. Cache inteligente.
-            Gratuito com contribuição voluntária.
-          </p>
-        </Section>
+          <Reveal delay={0.15}>
+            <p className="text-text-secondary text-[15px] sm:text-[17px] leading-relaxed text-center max-w-md mx-auto mb-6">
+              FLAC e MP3 320kbps verdadeiros. Cache inteligente. Gratuito com contribuição voluntária.
+            </p>
+          </Reveal>
 
-        <Section delay={0.3} className="w-full max-w-xl mx-auto">
-          <SearchBar onSearch={handleSearch} loading={loading} />
-          <div className="flex flex-wrap justify-center gap-3 mt-4">
-            <span className="flex items-center gap-1.5 text-xs text-text-muted">
-              <span className="w-2 h-2 rounded-full bg-emerald-500/80" /> FLAC
-            </span>
-            <span className="flex items-center gap-1.5 text-xs text-text-muted">
-              <span className="w-2 h-2 rounded-full bg-brand-gold/80" /> MP3 320kbps
-            </span>
-            <span className="flex items-center gap-1.5 text-xs text-text-muted">
-              <span className="w-2 h-2 rounded-full bg-text-muted/80" /> Cache inteligente
-            </span>
-            <span className="flex items-center gap-1.5 text-xs text-text-muted">
-              <span className="w-2 h-2 rounded-full bg-text-muted/80" /> Pix voluntário
-            </span>
-          </div>
-        </Section>
+          <Reveal delay={0.22}>
+            <SearchBar onSearch={handleSearch} loading={loading} />
+          </Reveal>
+
+          <Reveal delay={0.28}>
+            <div className="flex flex-wrap justify-center gap-x-4 gap-y-2 mt-4 text-[13px] text-text-muted">
+              <span className="flex items-center gap-1.5">
+                <span className="w-1.5 h-1.5 rounded-full bg-emerald-500/70" /> FLAC
+              </span>
+              <span className="flex items-center gap-1.5">
+                <span className="w-1.5 h-1.5 rounded-full bg-brand-gold/70" /> MP3 320
+              </span>
+              <span className="flex items-center gap-1.5">
+                <span className="w-1.5 h-1.5 rounded-full bg-text-muted/70" /> Cache
+              </span>
+              <span className="flex items-center gap-1.5">
+                <span className="w-1.5 h-1.5 rounded-full bg-text-muted/70" /> Pix ❤️
+              </span>
+            </div>
+          </Reveal>
+        </div>
       </section>
 
       {/* ── Results ── */}
-      {(loading || results.length > 0 || error || query) && (
-        <section className="section px-4">
-          <div className="max-w-3xl mx-auto">
+      {(loading || results.length > 0 || error || (searched && query)) && (
+        <section className="px-5 pb-16">
+          <div className="max-w-xl mx-auto">
             {loading && (
-              <div className="text-center py-12">
-                <div className="w-6 h-6 border-2 border-brand-gold/30 border-t-brand-gold rounded-full animate-spin mx-auto mb-3" />
-                <p className="text-text-secondary text-sm">Buscando no Soulseek...</p>
+              <div className="flex flex-col items-center py-10 gap-3">
+                <div className="w-6 h-6 border-2 border-brand-gold/30 border-t-brand-gold rounded-full animate-spin" />
+                <p className="text-text-muted text-[14px]">Buscando no Soulseek...</p>
               </div>
             )}
-
             {error && (
-              <div className="glass rounded-xl p-6 border-red-500/20 text-center">
-                <p className="text-red-400 font-medium">Erro na busca</p>
-                <p className="text-text-secondary text-xs mt-1">{error}</p>
+              <div className="glass rounded-xl p-5 text-center border border-red-500/15">
+                <p className="text-red-400 text-[14px] font-medium">Erro na busca</p>
+                <p className="text-text-muted text-[13px] mt-1">{error}</p>
               </div>
             )}
-
-            {!loading && !error && results.length === 0 && query && (
-              <div className="text-center py-12">
-                <p className="text-text-muted text-sm">Nenhum resultado para <span className="text-text-secondary font-medium">"{query}"</span></p>
+            {!loading && !error && results.length === 0 && searched && query && (
+              <div className="text-center py-10">
+                <p className="text-text-muted text-[14px]">Nenhum resultado para <span className="text-text-secondary">"{query}"</span></p>
               </div>
             )}
-
             {!loading && results.length > 0 && (
               <>
-                <div className="flex items-center justify-between mb-4">
-                  <p className="text-xs text-text-muted">{results.length} resultado{results.length !== 1 ? "s" : ""}</p>
-                </div>
+                <p className="text-text-muted text-[13px] mb-3">{results.length} resultado{results.length !== 1 ? "s" : ""}</p>
                 <div className="space-y-2.5">
-                  {results.map((r, i) => (
-                    <ResultCard key={r.id || i} result={r} />
-                  ))}
+                  {results.map((r, i) => <ResultCard key={r.id || i} result={r} />)}
                 </div>
               </>
             )}
@@ -230,124 +198,74 @@ export default function HomePage() {
         </section>
       )}
 
-      {/* ── How it works ── */}
-      {!query && !loading && (
+      {/* ── Below-fold content (when no search) ── */}
+      {!searched && (
         <>
-          <section className="section px-4">
+          {/* How it works */}
+          <section className="px-5 py-12 sm:py-16">
             <div className="max-w-5xl mx-auto">
-              <Section delay={0.1}>
-                <div className="text-center mb-12">
-                  <p className="inline-flex items-center gap-2 px-3 py-1.5 rounded-full bg-brand-gold/8 border border-brand-gold/15 text-brand-gold text-xs font-medium mb-4">
+              <Reveal>
+                <div className="text-center mb-8 sm:mb-10">
+                  <p className="inline-flex items-center gap-2 px-3 py-1.5 rounded-full bg-brand-gold/8 border border-brand-gold/15 text-brand-gold text-[12px] font-medium mb-3">
                     Como funciona
                   </p>
-                  <h2 className="text-2xl sm:text-3xl font-bold text-text-primary tracking-tight">
-                    Busca, baixa, toca
+                  <h2 className="text-[1.5rem] sm:text-[2rem] font-bold text-text-primary tracking-tight">
+                    Busca. Baixa. Toca.
                   </h2>
-                  <p className="text-text-secondary text-sm mt-3 max-w-md mx-auto">
-                    Sem assinatura, sem limite, sem upscale falso.
-                  </p>
                 </div>
-              </Section>
-
-              <div className="grid sm:grid-cols-2 lg:grid-cols-4 gap-3 sm:gap-4">
-                {steps.map((step, i) => (
-                  <StaggerItem key={step.title} index={i}>
-                    <div className="glass rounded-xl p-5 sm:p-6 gold-glow h-full">
-                      <span className="text-[10px] font-bold text-brand-gold/50 tracking-wider">{step.icon}</span>
-                      <h3 className="text-text-primary font-semibold text-base mt-2 mb-1.5">{step.title}</h3>
-                      <p className="text-text-secondary text-xs leading-relaxed">{step.desc}</p>
-                    </div>
-                  </StaggerItem>
+              </Reveal>
+              <div className="grid grid-cols-2 lg:grid-cols-4 gap-3 sm:gap-4">
+                {STEPS.map((s, i) => (
+                  <div key={s.title} className="glass rounded-xl p-4 sm:p-5 gold-glow">
+                    <span className="text-[10px] font-bold text-brand-gold/40 tracking-widest">{s.num}</span>
+                    <h3 className="text-text-primary font-semibold text-[15px] mt-1.5 mb-1">{s.title}</h3>
+                    <p className="text-text-muted text-[13px] leading-relaxed">{s.desc}</p>
+                  </div>
                 ))}
               </div>
             </div>
           </section>
 
-          {/* ── Features ── */}
-          <section className="section px-4">
+          {/* Features grid */}
+          <section className="px-5 py-12 sm:py-16">
             <div className="max-w-5xl mx-auto">
-              <Section delay={0.1}>
-                <div className="text-center mb-12">
-                  <p className="inline-flex items-center gap-2 px-3 py-1.5 rounded-full bg-brand-gold/8 border border-brand-gold/15 text-brand-gold text-xs font-medium mb-4">
-                    Diferenciais
-                  </p>
-                  <h2 className="text-2xl sm:text-3xl font-bold text-text-primary tracking-tight">
-                    Qualidade que faz diferença
+              <Reveal>
+                <div className="text-center mb-8 sm:mb-10">
+                  <h2 className="text-[1.5rem] sm:text-[2rem] font-bold text-text-primary tracking-tight">
+                    Por que usar?
                   </h2>
                 </div>
-              </Section>
-
-              <div className="grid sm:grid-cols-2 lg:grid-cols-3 gap-3 sm:gap-4">
-                {[
-                  {
-                    title: "FLAC real",
-                    desc: "Sem upscale de YouTube. Áudio verdadeiro de 320kbps e FLAC extraído de fontes lossless.",
-                    accent: "emerald",
-                  },
-                  {
-                    title: "Cache inteligente",
-                    desc: "Música já baixada por alguém? Seu download é instantâneo. O cache cresce com o uso.",
-                    accent: "gold",
-                  },
-                  {
-                    title: "Sem mensalidade",
-                    desc: "Não tem plano nem assinatura. Contribua via Pix se quiser — qualquer valor ajuda.",
-                    accent: "stone",
-                  },
-                  {
-                    title: "Rede Soulseek",
-                    desc: "Milhares de usuários compartilhando acervo real. Música que você não acha em lugar nenhum.",
-                    accent: "gold",
-                  },
-                  {
-                    title: "Pronto pra cabine",
-                    desc: "MP3 320 é o padrão de clubes e festas. FLAC pra quem quer o máximo de fidelidade.",
-                    accent: "emerald",
-                  },
-                  {
-                    title: "Open source",
-                    desc: "Código aberto no GitHub. Sem pegadinha, sem coleta de dados, sem surpresa.",
-                    accent: "stone",
-                  },
-                ].map((f, i) => (
-                  <StaggerItem key={f.title} index={i}>
-                    <div className="glass rounded-xl p-5 gold-glow h-full">
-                      <div className={`w-8 h-8 rounded-lg flex items-center justify-center text-xs font-bold mb-3 ${
-                        f.accent === "gold"
-                          ? "bg-brand-gold/12 text-brand-gold"
-                          : f.accent === "emerald"
-                            ? "bg-emerald-500/10 text-emerald-400"
-                            : "bg-white/5 text-text-muted"
-                      }`}>
-                        {i + 1}
-                      </div>
-                      <h3 className="text-text-primary font-semibold text-sm mb-1.5">{f.title}</h3>
-                      <p className="text-text-secondary text-xs leading-relaxed">{f.desc}</p>
-                    </div>
-                  </StaggerItem>
+              </Reveal>
+              <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3 sm:gap-4">
+                {FEATURES.map((f, i) => (
+                  <div key={f.title} className="glass rounded-xl p-4 gold-glow">
+                    <div className="w-8 h-8 rounded-lg flex items-center justify-center text-[11px] font-bold bg-brand-gold/10 text-brand-gold mb-2.5">{f.num}</div>
+                    <h3 className="text-text-primary font-semibold text-[15px] mb-1">{f.title}</h3>
+                    <p className="text-text-muted text-[13px] leading-relaxed">{f.desc}</p>
+                  </div>
                 ))}
               </div>
             </div>
           </section>
 
-          {/* ── Final CTA ── */}
-          <section className="section px-4">
-            <Section delay={0.1}>
-              <div className="max-w-lg mx-auto glass rounded-2xl p-8 sm:p-10 text-center border-brand-gold/10">
-                <p className="inline-flex items-center gap-2 px-3 py-1.5 rounded-full bg-brand-gold/8 border border-brand-gold/15 text-brand-gold text-xs font-medium mb-4">
-                  ❤️ Contribua
+          {/* CTA */}
+          <section className="px-5 py-12 sm:py-16">
+            <Reveal>
+              <div className="max-w-lg mx-auto glass rounded-2xl p-6 sm:p-8 text-center border-brand-gold/10">
+                <p className="inline-flex items-center gap-2 px-3 py-1.5 rounded-full bg-brand-gold/8 border border-brand-gold/15 text-brand-gold text-[12px] font-medium mb-3">
+                  ❤️ Contribuição voluntária
                 </p>
-                <h2 className="text-2xl sm:text-3xl font-bold text-text-primary tracking-tight mb-3">
-                  Gostou? Apoie o projeto
+                <h2 className="text-[1.5rem] font-bold text-text-primary tracking-tight mb-2">
+                  Gostou? Apoie
                 </h2>
-                <p className="text-text-secondary text-sm mb-6 max-w-sm mx-auto leading-relaxed">
-                  GHUST-DL é gratuito. Se o servidor te ajudou a achar aquela música pro próximo set, qualquer contribuição ajuda a manter tudo online.
+                <p className="text-text-muted text-[14px] mb-5 max-w-xs mx-auto leading-relaxed">
+                  Servidor, cache, domínio. Qualquer contribuição ajuda a manter o projeto online.
                 </p>
-                <Link to="/donate" className="btn-gold inline-flex px-8 py-4 text-base">
+                <Link to="/donate" className="btn-gold text-[15px] px-8">
                   Fazer um Pix
                 </Link>
               </div>
-            </Section>
+            </Reveal>
           </section>
         </>
       )}

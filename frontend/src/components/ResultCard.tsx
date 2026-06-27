@@ -1,11 +1,11 @@
-import { formatSize, startDownload, getFileUrl } from "../lib/api"
 import { useState } from "react"
+import { formatSize, startDownload, getFileUrl } from "../lib/api"
 
-interface ResultCardProps {
+interface Props {
   result: any
 }
 
-export default function ResultCard({ result }: ResultCardProps) {
+export default function ResultCard({ result }: Props) {
   const [downloading, setDownloading] = useState(false)
   const [done, setDone] = useState(false)
 
@@ -28,35 +28,28 @@ export default function ResultCard({ result }: ResultCardProps) {
     }
   }
 
-  const qualityColor =
-    result.format === "FLAC"
-      ? "text-emerald-400"
-      : result.bitrate?.includes("320")
-        ? "text-brand-gold"
-        : "text-text-muted"
-
+  const format = result.format || "—"
+  const isFlac = format === "FLAC"
+  const is320 = result.bitrate?.includes("320")
   const isCached = result.cached
 
   return (
-    <div className="glass rounded-xl p-3.5 sm:p-4 gold-glow">
-      <div className="flex items-center gap-3">
+    <div className="glass rounded-xl p-3.5 gold-glow">
+      <div className="flex items-start gap-3">
         <div className="min-w-0 flex-1">
-          <p className="text-sm font-medium text-text-primary truncate">{result.filename}</p>
+          <p className="text-[15px] font-medium text-text-primary truncate leading-snug">{result.filename}</p>
           <div className="flex items-center gap-2.5 mt-1.5 flex-wrap">
-            <span className={`text-[11px] font-medium ${qualityColor}`}>
-              {result.format || result.bitrate}
+            <span className={`text-[12px] font-medium ${isFlac ? "text-emerald-400" : is320 ? "text-brand-gold" : "text-text-muted"}`}>
+              {format}
             </span>
-            <span className="text-[11px] text-text-muted">{formatSize(result.size)}</span>
-            {isCached && <span className="text-[11px] text-emerald-400">✓ em cache</span>}
-            {!isCached && result.username && (
-              <span className="text-[11px] text-text-muted">{result.username}</span>
-            )}
+            <span className="text-[12px] text-text-muted">{formatSize(result.size)}</span>
+            {isCached && <span className="text-[12px] text-emerald-400">✓ cache</span>}
           </div>
         </div>
         <button
           onClick={handleDownload}
           disabled={downloading}
-          className={`shrink-0 px-3.5 py-2.5 rounded-lg text-xs font-medium transition-all min-w-[80px] text-center ${
+          className={`shrink-0 min-w-[88px] min-h-[44px] px-4 py-2.5 rounded-lg text-[14px] font-medium transition-all ${
             done
               ? "bg-emerald-500/15 text-emerald-400"
               : downloading
@@ -66,7 +59,7 @@ export default function ResultCard({ result }: ResultCardProps) {
                   : "bg-white/8 text-text-primary hover:bg-white/12"
           }`}
         >
-          {done ? "Baixado" : downloading ? "..." : isCached ? "Baixar" : "Buscar"}
+          {done ? "✓ Baixado" : downloading ? "..." : isCached ? "Baixar" : "Buscar"}
         </button>
       </div>
     </div>
