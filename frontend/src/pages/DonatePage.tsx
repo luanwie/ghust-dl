@@ -13,7 +13,7 @@ function FadeUp({ children, delay = 0 }: { children: React.ReactNode; delay?: nu
 }
 
 export default function DonatePage() {
-  const chave = "000.000.000-00"
+  const chave = "0fed2417-3df5-41ff-aae1-1f9e928e9bbd"
 
   return (
     <div className="px-5 py-12 max-w-md mx-auto">
@@ -41,7 +41,7 @@ export default function DonatePage() {
           </div>
 
           <div className="glass rounded-xl p-4 mb-3">
-            <p className="text-text-muted text-[12px] mb-1">Chave Pix (CPF)</p>
+            <p className="text-text-muted text-[12px] mb-1">Chave Pix (aleatória)</p>
             <p className="text-text-primary font-mono text-[15px] sm:text-base font-medium tracking-wider">{chave}</p>
           </div>
 

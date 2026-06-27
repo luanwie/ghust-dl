@@ -24,8 +24,9 @@ function MouseGlow() {
   const ref = useRef<HTMLDivElement>(null)
   const raf = useRef(0)
   const reduce = useReducedMotion()
+  const [isTouch] = useState(() => typeof window !== "undefined" && ("ontouchstart" in window || navigator.maxTouchPoints > 0))
   useEffect(() => {
-    if (reduce) return
+    if (reduce || isTouch) return
     const el = ref.current
     if (!el) return
     const handler = (e: PointerEvent) => {
@@ -37,14 +38,17 @@ function MouseGlow() {
     }
     window.addEventListener("pointermove", handler)
     return () => { window.removeEventListener("pointermove", handler); cancelAnimationFrame(raf.current) }
-  }, [reduce])
+  }, [reduce, isTouch])
+  if (isTouch) return null
   return <div ref={ref} aria-hidden className="pointer-events-none fixed inset-0 z-[60]" style={{ background: "radial-gradient(600px circle at var(--mx,50%) var(--my,50%),rgba(235,166,28,0.06) 0%,transparent 50%)" }} />
 }
 
 /* ── BgOrbs ── */
 function BgOrbs() {
   const r = useReducedMotion()
-  if (r) return null
+  const [isDesktop, setDesktop] = useState(false)
+  useEffect(() => { setDesktop(window.innerWidth >= 1024) }, [])
+  if (r || !isDesktop) return null
   return (
     <div className="pointer-events-none fixed inset-0 z-[1] overflow-hidden">
       <motion.div className="absolute rounded-full" style={{ width: 480, height: 480, background: "rgba(235,166,28,0.035)", filter: "blur(90px)", top: "3%", left: "-12%" }}
